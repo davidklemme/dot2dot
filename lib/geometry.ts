@@ -12,3 +12,14 @@ export function trace(mask: Uint8Array,w: number,h: number): Point[][]{
  }return paths.sort((a,b)=>b.length-a.length);
 }
 export function sample(points: Point[],count: number, closed = true): Point[]{if(!points.length||count<=0)return [];const lengths=[0];for(let i=1;i<(closed?points.length+1:points.length);i++){const a=points[i-1],b=points[i%points.length];lengths.push(lengths[lengths.length-1]+Math.hypot(b[0]-a[0],b[1]-a[1]));}const out: Point[]=[];let j=1;for(let i=0;i<count;i++){const d=i*lengths[lengths.length-1]/(closed?count:Math.max(1,count-1));while(j<lengths.length-1&&lengths[j]<d)j++;const a=points[j-1],b=points[j%points.length],t=(d-lengths[j-1])/(lengths[j]-lengths[j-1]||1);out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]);}return out;}
+
+/** Use a consistent distance along paths; tiny features remain unnumbered linework. */
+export function spacedDots(points: Point[], spacing: number, closed: boolean): Point[] {
+ if(points.length<2||spacing<=0)return [];
+ let length=0;
+ for(let i=1;i<points.length;i++)length+=Math.hypot(points[i][0]-points[i-1][0],points[i][1]-points[i-1][1]);
+ if(closed)length+=Math.hypot(points[0][0]-points.at(-1)![0],points[0][1]-points.at(-1)![1]);
+ const count=Math.floor(length/spacing)+(closed?0:1);
+ if(count<(closed?3:2))return [];
+ return sample(points,count,closed);
+}
